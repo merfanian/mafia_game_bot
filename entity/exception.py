@@ -1,0 +1,2 @@
+class BannedException(RuntimeWarning):
+    pass

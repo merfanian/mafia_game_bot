@@ -1,26 +1,23 @@
+from entity.exception import BannedException
 from entity.player import *
 from entity.role import Citizen, Mafia, HostageTaker, DoctorLecter, Doctor, Detective, Guard, Investigator, Sniper, Role
-from utils.telegramcommunicator import TelegramCommunicator as Tc
-from utils.utils import find_type_in_list
-from entity.exception import BannedException
-
 from utils.telegramcommunicator import TelegramCommunicator
+from utils.utils import find_type_in_list
 
 
 class Game:
-
     def __init__(self, players: list[Player], tc: TelegramCommunicator):
         self.players = players
         self.mafias: list[Mafia] = [p.role for p in players if isinstance(p.role, Mafia)]
         self.citizens: list[Citizen] = [p.role for p in players if isinstance(p.role, Citizen)]
-        self.all = self.mafias + self.citizens
+        self.all: list[Role] = self.mafias + self.citizens
         self.dead: list[Role] = []
         self.days_passed = 0
         self.tc = tc
+        self.finished = False
 
     def handle_status_inquiry(self):
-        decision = self.tc.get_input_from_list("Do you want to get status inquiry?", [True, False], to="Everyone")
-        if decision:
+        if self.tc.get_bool_from_user("Do you want to get status inquiry?", to="Everyone"):
             self.tc.send_status_inquiry([d for d in self.dead if isinstance(d, Mafia)],
                                         [d for d in self.dead if isinstance(d, Citizen)])
 
@@ -39,25 +36,24 @@ class Game:
         # wake mafias and choose a person to shot
         shooter: Mafia = next(iter(self.mafias))
         shooter.kill(
-            self.tc.get_input_from_list("Who do you want to shoot at night?", self.citizens, to=shooter.role_name))
+            self.tc.get_player_from_list("Who do you want to shoot at night?", self.citizens, to="Mafia Team"))
 
         # wake doctor lecter and save a mafia
         drlecter: DoctorLecter = find_type_in_list(DoctorLecter, self.mafias)
         if drlecter:
-            drlecter.heal(self.tc.get_input_from_list("Who do you want to save?", self.mafias, to=drlecter.role_name))
+            drlecter.heal(self.tc.get_player_from_list("Who do you want to save?", self.mafias, to=drlecter))
 
         # wake hostage taker and ban a citizen
         hostage_taker: HostageTaker = find_type_in_list(HostageTaker, self.mafias)
         if hostage_taker:
             hostage_taker.block(
-                self.tc.get_input_from_list("Who do you want to take as hostage?", self.citizens,
-                                            to=hostage_taker.role_name))
+                self.tc.get_player_from_list("Who do you want to take as hostage?", self.citizens, to=hostage_taker))
 
         # wake guard and release hostage
         guard: Guard = find_type_in_list(Guard, self.citizens)
         if guard:
             try:
-                guard.unblock(self.tc.get_input_from_list("Who do you want to save?", self.all, to=guard.role_name))
+                guard.unblock(self.tc.get_player_from_list("Who do you want to guard?", self.all, to=guard))
             except BannedException:
                 self.tc.send_message("You are banned")
 
@@ -65,7 +61,7 @@ class Game:
         doctor: Doctor = find_type_in_list(Doctor, self.citizens)
         if doctor:
             try:
-                doctor.heal(self.tc.get_input_from_list("Who do you want to save?", self.all, to=doctor.role_name))
+                doctor.heal(self.tc.get_player_from_list("Who do you want to save?", self.all, to=doctor))
             except BannedException:
                 self.tc.send_message("You are banned")
 
@@ -75,7 +71,7 @@ class Game:
             try:
                 self.tc.send_message(
                     detective.detect(
-                        self.tc.get_input_from_list("Who do you want to detect?", self.all, to=detective.role_name)))
+                        self.tc.get_player_from_list("Who do you want to detect?", self.all, to=detective)))
             except BannedException:
                 self.tc.send_message("You are banned")
 
@@ -85,8 +81,8 @@ class Game:
             try:
                 self.tc.send_message(
                     investigator.investigate(
-                        self.tc.get_input_from_list("Choose first person", self.all, to=investigator.role_name),
-                        self.tc.get_input_from_list("Choose second person", self.all, to=investigator.role_name)))
+                        self.tc.get_player_from_list("Choose first person", self.all, to=investigator),
+                        self.tc.get_player_from_list("Choose second person", self.all, to=investigator)))
             except BannedException:
                 self.tc.send_message("You are banned")
 
@@ -94,10 +90,8 @@ class Game:
         sniper: Sniper = find_type_in_list(Sniper, self.citizens)
         if sniper:
             try:
-                decision = self.tc.get_input_from_list("Do you want to shoot tonight?", [True, False],
-                                                       to=sniper.role_name)
-                if decision:
-                    sniper.kill(self.tc.get_input_from_list("Who do you want to kill?", self.all, to=sniper.role_name))
+                if self.tc.get_bool_from_user("Do you want to shoot tonight?", to=sniper):
+                    sniper.kill(self.tc.get_player_from_list("Who do you want to kill?", self.all, to=sniper))
             except BannedException:
                 self.tc.send_message("You are banned")
 
@@ -105,17 +99,34 @@ class Game:
 
     def switch_to_day(self):
         voter: Role = next(iter(self.all))
-        decision = self.tc.get_input_from_list("Do you have kill candidate today?", [True, False],
-                                               to="City")
-        if decision:
-            voter.vote(self.tc.get_input_from_list("Who do you want to kill?", self.all, to="City"))
+        if self.tc.get_bool_from_user("Do you have kill candidate today?", to="City"):
+            voter.vote(self.tc.get_player_from_list("Who do you want to kill?", self.all, to="City"))
 
         [p.pass_day() for p in self.all]
 
     def start(self):
-        while True:
+        while not self.is_game_finished:
             self.switch_to_night()
             self.handle_morning_announcement(self.update_players())
+            if self.is_game_finished:
+                break
             self.handle_status_inquiry()
             self.switch_to_day()
             self.update_players()
+
+        self.finalize()
+
+    def finalize(self):
+        self.finished = True
+        if len(self.mafias) == 0:
+            self.tc.send_message("Citizens won!", to="Everyone")
+        elif len(self.mafias) >= len(self.citizens):
+            self.tc.send_message("Mafias won!", to="Everyone")
+
+    @property
+    def is_game_finished(self):
+        if len(self.mafias) >= len(self.citizens):
+            return True
+        if len(self.mafias) == 0:
+            return True
+        return False

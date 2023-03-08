@@ -1,0 +1,33 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: POEditor.com\n"
+"Project-Id-Version: mafia_game\n"
+"Language: fa\n"
+
+#: 
+msgid "Do you want to get status inquiry?"
+msgstr "آیا می‌خواهید استعلام وضعیت بگیرید؟"
+
+#: 
+msgid "Morning Announcements"
+msgstr "اخبار روز"
+
+#: 
+msgid "Who do you want to shoot at night?"
+msgstr "به چه کسی می‌خواهی در شب شلیک کنی؟"
+
+#: 
+msgid "Who do you want to save?"
+msgstr "چه کسی را می‌خواهی نجات دهی؟"
+
+#: 
+msgid "Who do you want to take as hostage?"
+msgstr "چه کسی را می‌خواهی گروگان بگیری؟"
+
+#: 
+msgid "Who do you want to guard?"
+msgstr "از چه کسی می‌خواهی نگهبانی کنی؟"
+

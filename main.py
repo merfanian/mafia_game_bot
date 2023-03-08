@@ -1,12 +1,6 @@
-import logging
-
 from dotenv import load_dotenv
 
-from entity.game import Game
-from entity.player import Player
-from entity.role import GodFather, HostageTaker, \
-    DoctorLecter, Doctor, Detective, \
-    Sniper, Guard, Investigator, Armored
+from utils.game_facilitator import Facilitator
 from utils.telegramcommunicator import TelegramCommunicator
 
 load_dotenv()
@@ -19,17 +13,9 @@ API_KEY = os.environ.get('API_KEY')
 bot = telebot.TeleBot(API_KEY)
 
 
-def init_game(chat_id):
-    game = Game([Player("godfather", GodFather()),
-                 Player("doctor", Doctor()),
-                 Player("drlecter", DoctorLecter()),
-                 Player("detective", Detective()),
-                 Player("hostage taker", HostageTaker()),
-                 Player("investigator", Investigator()),
-                 Player("sniper", Sniper()),
-                 Player("guard", Guard()),
-                 Player("armored", Armored())
-                 ], TelegramCommunicator(bot, chat_id))
+def init_game(tc):
+    facilitator = Facilitator(tc)
+    game = facilitator.handle_game_init()
     game.start()
 
 
@@ -39,10 +25,10 @@ def send_welcome(message):
 
 
 @bot.message_handler(commands=['play'])
-def sign_handler(message):
+def play_handler(message):
     text = "Let's play"
     sent_msg = bot.send_message(message.chat.id, text, parse_mode="Markdown")
-    init_game(message.chat.id)
+    init_game(TelegramCommunicator(bot, message.chat.id))
 
 
 if __name__ == '__main__':

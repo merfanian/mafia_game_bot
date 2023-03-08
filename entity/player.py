@@ -6,3 +6,7 @@ class Player:
 
     def __str__(self):
         return self.name
+
+    @property
+    def details(self):
+        return " ".join([self.name, str(self.role)])

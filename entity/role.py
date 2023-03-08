@@ -42,10 +42,6 @@ class Role(VotingAbility, ABC):
         self.player = player
 
     def __str__(self):
-        return str(self.player)
-
-    @property
-    def role_name(self):
         return type(self).__name__
 
     @property
@@ -158,3 +154,7 @@ class Sniper(Citizen, KillingAbility):
             super(Sniper, self).kill(role)
         else:
             self.kicked = True
+
+
+class SimpleCitizen(Citizen):
+    pass

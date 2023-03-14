@@ -26,7 +26,7 @@ def send_welcome(message):
 
 @bot.message_handler(commands=['play'])
 def play_handler(message):
-    text = "Let's play"
+    text = "Let's play 🎮"
     sent_msg = bot.send_message(message.chat.id, text, parse_mode="Markdown")
     init_game(TelegramCommunicator(bot, message.chat.id))
 

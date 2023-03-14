@@ -106,13 +106,13 @@ class Game:
 
     def start(self):
         while not self.is_game_finished:
-            self.switch_to_night()
-            self.handle_morning_announcement(self.update_players())
-            if self.is_game_finished:
-                break
-            self.handle_status_inquiry()
             self.switch_to_day()
             self.update_players()
+            if self.is_game_finished:
+                break
+            self.switch_to_night()
+            self.handle_morning_announcement(self.update_players())
+            self.handle_status_inquiry()
 
         self.finalize()
 

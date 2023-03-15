@@ -55,7 +55,8 @@ class Facilitator:
             self.tc.get_input_from_list(f"Got it? ", ["Got it"])
             self.tc.edit_message(sent_msg, f"*{p.name}* knew his/her role right here.")
         else:
-            self.tc.get_input_from_list("Hand the phone to the God", ["Start the game"])
+            self.tc.get_input_from_list("Hand the phone to the God", ["Show all roles"])
+            self.tc.pin_message(self.tc.send_list("Player roles", [p.details for p in self.players]))
 
     def handle_game_init(self) -> Game:
         self.mafia_count = self.tc.get_number_from_user("How many mafias?")

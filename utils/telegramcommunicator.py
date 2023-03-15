@@ -95,6 +95,12 @@ class TelegramCommunicator:
             message = f"*{to}*:\n\n{message}"
         return self.bot.send_message(self.chat_id, message, parse_mode="Markdown", reply_markup=reply_markup)
 
+    def pin_message(self, msg):
+        return self.bot.pin_chat_message(chat_id=self.chat_id, message_id=msg.message_id)
+
+    def unpin_message(self, msg=None):
+        return self.bot.unpin_chat_message(chat_id=self.chat_id, message_id=msg.message_id if msg else None)
+
     def edit_message(self, sent_msg, text, reply_markup=None):
         self.bot.edit_message_text(chat_id=self.chat_id, message_id=sent_msg.message_id,
                                    text=text, parse_mode="Markdown",

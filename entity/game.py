@@ -123,6 +123,8 @@ class Game:
         elif len(self.mafias) >= len(self.citizens):
             self.tc.send_message("Mafias won!", to="Everyone")
 
+        self.tc.unpin_message()
+
     @property
     def is_game_finished(self):
         if len(self.mafias) >= len(self.citizens):
